@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Message For You</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050510;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1, h2 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Canvas Background */
+        #star-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Glassmorphism UI */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            border-radius: 1.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Question Container Transitions */
+        #question-container {
+            transition: opacity 0.6s ease-in-out, transform 0.6s ease-out;
+        }
+        .fade-out {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInAnim 0.6s forwards;
+        }
+        @keyframes fadeInAnim {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom Input Styling */
+        textarea {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 1.25rem;
+            padding: 0.5rem;
+            resize: none;
+            outline: none;
+            transition: border-color 0.3s, background 0.3s;
+        }
+        textarea:focus {
+            border-bottom: 2px solid #a78bfa;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Custom Audio Player */
+        .music-player {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 20px;
+            border-radius: 50px;
+            z-index: 50;
+            transition: all 0.3s ease;
+        }
+        .music-player button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .music-player button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+        .music-info {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center">
+
+    <!-- Space Background -->
+    <canvas id="star-canvas"></canvas>
+
+    <!-- Custom Music Player -->
+    <div class="glass-panel music-player">
+        <button id="play-pause-btn" aria-label="Play Music">
+            <!-- Play Icon -->
+            <svg id="play-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+            </svg>
+            <!-- Pause Icon -->
+            <svg id="pause-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+        </button>
+        <div class="music-info">
+            <p class="font-medium tracking-wider">Background Track</p>
+        </div>
+        <!-- Configured for your specific MP3 file -->
+        <audio id="bg-music" loop>
+            <source src="Albumaty.Com_aldba__myn_ysdk_-_nwr.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="w-full max-w-3xl px-6 relative z-10">
+        <!-- Progress Bar -->
+        <div id="progress-container" class="w-full h-1 bg-white/10 rounded-full mb-12 hidden">
+            <div id="progress-bar" class="h-full bg-purple-400 rounded-full transition-all duration-500" style="width: 0%;"></div>
+        </div>
+
+        <div id="question-container" class="glass-panel p-10 md:p-14 text-center fade-in">
+            <!-- Content injected via JS -->
+        </div>
+    </main>
+
+    <!-- Hidden form for submission -->
+    <form id="submission-form" action="https://formspree.io/f/xoejyppe" method="POST" class="hidden"></form>
+
+    <script>
+        // 1. CANVAS STAR & SHOOTING STAR BACKGROUND
+        const canvas = document.getElementById('star-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let stars = [];
+        let shootingStars = [];
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Star {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 1.5;
+                this.speedY = Math.random() * 0.2 + 0.05;
+                this.alpha = Math.random();
+                this.alphaChange = (Math.random() * 0.02) - 0.01;
+            }
+            update() {
+                this.y -= this.speedY;
+                this.alpha += this.alphaChange;
+                if (this.alpha <= 0.1 || this.alpha >= 0.9) this.alphaChange *= -1;
+                if (this.y < 0) {
+                    this.y = height;
+                    this.x = Math.random() * width;
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                ctx.fill();
+            }
+        }
+
+        class ShootingStar {
+            constructor() {
+                this.reset();
+                this.state = 'waiting';
+                this.waitTime = Math.random() * 100;
+            }
+            reset() {
+                if (Math.random() > 0.5) {
+                    this.x = Math.random() * (width / 2) + (width / 2);
+                    this.y = -50;
+                } else {
+                    this.x = width + 50;
+                    this.y = Math.random() * (height / 2);
+                }
+                this.length = Math.random() * 100 + 50;
+                this.speed = Math.random() * 8 + 6;
+                this.thickness = Math.random() * 2 + 1;
+                this.opacity = 0;
+                this.state = 'entering';
+            }
+            update() {
+                if (this.state === 'waiting') {
+                    this.waitTime--;
+                    if (this.waitTime <= 0) this.reset();
+                    return;
+                }
+                this.x -= this.speed;
+                this.y += this.speed;
+
+                if (this.state === 'entering') {
+                    this.opacity += 0.1;
+                    if (this.opacity >= 1) this.state = 'active';
+                } else if (this.state === 'active') {
+                    if (Math.random() < 0.02) this.state = 'dying';
+                } else if (this.state === 'dying') {
+                    this.opacity -= 0.05;
+                    if (this.opacity <= 0) {
+                        this.state = 'waiting';
+                        this.waitTime = Math.random() * 200 + 50;
+                    }
+                }
+
+                if (this.x < -this.length || this.y > height + this.length) {
+                    this.state = 'waiting';
+                    this.waitTime = Math.random() * 200 + 50;
+                }
+            }
+            draw() {
+                if (this.state === 'waiting' || this.opacity <= 0) return;
+                
+                ctx.beginPath();
+                ctx.moveTo(this.x + this.length, this.y - this.length);
+                ctx.lineTo(this.x, this.y);
+                
+                let gradient = ctx.createLinearGradient(this.x + this.length, this.y - this.length, this.x, this.y);
+                gradient.addColorStop(0, `rgba(255, 255, 255, 0)`);
+                gradient.addColorStop(1, `rgba(180, 200, 255, ${this.opacity})`);
+                
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = this.thickness;
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.thickness * 1.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = "#a78bfa";
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        for (let i = 0; i < 150; i++) stars.push(new Star());
+        for (let i = 0; i < 4; i++) shootingStars.push(new ShootingStar());
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            stars.forEach(star => { star.update(); star.draw(); });
+            shootingStars.forEach(ss => { ss.update(); ss.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // 2. MUSIC PLAYER LOGIC
+        const audio = document.getElementById('bg-music');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const playIcon = document.getElementById('play-icon');
+        const pauseIcon = document.getElementById('pause-icon');
+
+        playPauseBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+            } else {
+                audio.pause();
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+            }
+        });
+
+        // 3. QUESTIONNAIRE LOGIC
+        const questions = [
+            { id: 'q1', type: 'welcome' },
+            { id: 'q2', text: "Do you really want to comeback? (be honest)", name: "Want_to_comeback" },
+            { id: 'q3', text: "Why hiding that you are scared, wasn’t I your husband that we don’t hide things from each other?", name: "Why_hiding_scared" },
+            { id: 'q4', text: "Why all that, if you want to leave just tell me instead of doing that?", name: "Why_not_just_tell_me" },
+            { id: 'q5', text: "Why you hide your feelings from me and don’t accept anything for me, the only thing you took was the flowers?", name: "Hiding_feelings_and_flowers" },
+            { id: 'q6', text: "I truly think if you got the courage to tell me you dont want to continue that means your love is fake. How you want me to trust you again?", name: "Trust_and_courage" },
+            { id: 'q7', text: "If you want to add a comment or smth from your heart put it here.", name: "Final_comment" }
+        ];
+
+        let currentStep = 0;
+        let userResponses = {};
+        
+        const container = document.getElementById('question-container');
+        const form = document.getElementById('submission-form');
+        const progressBar = document.getElementById('progress-bar');
+        const progressContainer = document.getElementById('progress-container');
+
+        function updateProgress() {
+            if (currentStep === 0) {
+                progressContainer.classList.add('hidden');
+            } else {
+                progressContainer.classList.remove('hidden');
+                const percentage = ((currentStep) / (questions.length - 1)) * 100;
+                progressBar.style.width = percentage + '%';
+            }
+        }
+
+        function renderStep() {
+            container.classList.remove('fade-in');
+            container.classList.add('fade-out');
+
+            setTimeout(() => {
+                const q = questions[currentStep];
+                let html = '';
+
+                if (q.type === 'welcome') {
+                    html = `
+                        <h1 class="text-3xl md:text-5xl font-semibold mb-4 text-white/90">Please answer honestly.</h1>
+                        <p class="text-white/60 mb-8 text-lg">Take your time. Whenever you are ready, let's begin.</p>
+                        <button onclick="nextStep()" class="px-8 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-white font-medium transition-all duration-300">
+                            Start
+                        </button>
+                    `;
+                } else {
+                    const savedAnswer = userResponses[q.name] || '';
+                    html = `
+                        <h2 class="text-2xl md:text-3xl font-medium mb-8 text-white/90 leading-snug">${q.text}</h2>
+                        <div class="w-full flex flex-col items-center">
+                            <textarea 
+                                id="current-input" 
+                                class="w-full bg-transparent text-center focus:text-left" 
+                                rows="3" 
+                                placeholder="Type your answer here..."
+                                onkeydown="handleEnter(event)"
+                            >${savedAnswer}</textarea>
+                            <div class="w-full flex justify-between items-center mt-6">
+                                ${currentStep > 1 ? `<button onclick="prevStep()" class="text-white/50 hover:text-white transition-colors text-sm uppercase tracking-widest">Back</button>` : '<div></div>'}
+                                <div class="flex items-center gap-4">
+                                    <span class="text-xs text-white/40 hidden md:inline">Press Shift + Enter for new line, Enter to submit</span>
+                                    <button onclick="nextStep()" class="px-6 py-2 bg-white text-black rounded-full font-medium hover:bg-gray-200 transition-colors">
+                                        ${currentStep === questions.length - 1 ? 'Finish & Send' : 'Next'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = html;
+                updateProgress();
+                container.classList.remove('fade-out');
+                container.classList.add('fade-in');
+
+                const input = document.getElementById('current-input');
+                if (input) {
+                    setTimeout(() => input.focus(), 100);
+                }
+
+            }, 600);
+        }
+
+        function saveCurrentAnswer() {
+            const input = document.getElementById('current-input');
+            if (input) {
+                const q = questions[currentStep];
+                userResponses[q.name] = input.value;
+            }
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                nextStep();
+            }
+        }
+
+        function prevStep() {
+            saveCurrentAnswer();
+            if (currentStep > 1) {
+                currentStep--;
+                renderStep();
+            }
+        }
+
+        function nextStep() {
+            saveCurrentAnswer();
+            if (currentStep < questions.length - 1) {
+                currentStep++;
+                renderStep();
+            } else {
+                submitForm();
+            }
+        }
+
+        function submitForm() {
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center space-y-4 py-8">
+                    <div class="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+                    <p class="text-lg text-white/80">Sending...</p>
+                </div>
+            `;
+
+            form.innerHTML = '';
+            for (const [name, value] of Object.entries(userResponses)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                form.appendChild(input);
+            }
+
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    container.innerHTML = `
+                        <h2 class="text-3xl font-medium mb-4 text-white">Sent.</h2>
+                        <p class="text-white/60">Thank you for your honesty. The message has been delivered.</p>
+                    `;
+                    progressContainer.classList.add('hidden');
+                } else {
+                    throw new Error('Network response was not ok');
+                }
+            }).catch(error => {
+                container.innerHTML = `
+                    <h2 class="text-2xl font-medium mb-4 text-red-400">Something went wrong.</h2>
+                    <p class="text-white/60 mb-6">Could not send the message. Please try again.</p>
+                    <button onclick="renderStep()" class="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">Go Back</button>
+                `;
+            });
+        }
+
+        renderStep();
+    </script>
+</body>
+</html>
